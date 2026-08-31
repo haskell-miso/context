@@ -157,17 +157,17 @@ accentC    = "#b2bec3"   -- muted gray (opts out)
 -- =====================================================================
 
 -- | A titled, colored card used by the child components.
-childCard :: MisoString -> MisoString -> MisoString -> [View model action] -> View model action
+childCard :: MisoString -> MisoString -> MisoString -> [View context model action] -> View context model action
 childCard border color title body =
   H.div_ [ CSS.style_ (cardStyle border color) ]
     (componentHeader title : body)
 
-componentHeader :: MisoString -> View model action
+componentHeader :: MisoString -> View context model action
 componentHeader label =
   H.div_ [ CSS.style_ headerStyle ] [ text label ]
 
 -- | Small pill next to a component header, tinted with the card's accent.
-badge :: MisoString -> MisoString -> View model action
+badge :: MisoString -> MisoString -> View context model action
 badge color label =
   H.span_
     [ CSS.style_
@@ -184,7 +184,7 @@ badge color label =
     ]
     [ text label ]
 
-infoRow :: MisoString -> MisoString -> View model action
+infoRow :: MisoString -> MisoString -> View context model action
 infoRow label val =
   H.div_
     [ CSS.style_
@@ -199,7 +199,7 @@ infoRow label val =
     , H.span_ [ CSS.style_ [ CSS.color (CSS.hex "#444") ] ] [ text val ]
     ]
 
-sectionLabel :: MisoString -> View model action
+sectionLabel :: MisoString -> View context model action
 sectionLabel label =
   H.div_
     [ CSS.style_
@@ -212,22 +212,22 @@ sectionLabel label =
     ]
     [ text label ]
 
-btn :: MisoString -> action -> MisoString -> View model action
+btn :: MisoString -> action -> MisoString -> View context model action
 btn color action label =
   H.button_ [ H.onClick action, CSS.style_ (btnStyle color) ] [ text label ]
 
-buttonRow :: [View model action] -> View model action
+buttonRow :: [View context model action] -> View context model action
 buttonRow children =
   H.div_ [ CSS.style_ [ CSS.display "flex", CSS.gap "8px", CSS.marginTop "10px" ] ]
     children
 
 -- | Dashed inner section keyed to an accent color (props from parent / context).
-propsSection :: MisoString -> [View model action] -> View model action
+propsSection :: MisoString -> [View context model action] -> View context model action
 propsSection color children =
   H.div_ [ CSS.style_ (innerSectionStyle color) ] children
 
 -- | Dashed inner section keyed to an accent color (component-owned state).
-stateSection :: MisoString -> [View model action] -> View model action
+stateSection :: MisoString -> [View context model action] -> View context model action
 stateSection color children =
   H.div_ [ CSS.style_ (innerSectionStyle color) ] children
 
