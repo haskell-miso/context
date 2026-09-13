@@ -17,7 +17,7 @@ import           Miso.Reload (liveWithContext)
 -- context-aware 'Component'. Whenever it changes (per its 'Eq' instance) every
 -- 'Component' with @useContext@ enabled re-renders against the new value.
 --
--- Read it via the first argument threaded into 'view'; write it from 'update'
+-- Read it inside a 'view' with 'vcontext'; write it from 'update'
 -- with 'modifyContext' \/ 'putContext'.
 type Context = Int
 ----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ root :: Component Context () () RootAction
 root = component () update view
   where
     update ResetContext = putContext 0
-    view ctx _ _ =
+    view _ = vcontext $ \ctx ->
       H.div_ [ CSS.style_ pageStyle ]
         [ H.h1_ [ CSS.style_ titleStyle ]
             [ "🍜 "
@@ -87,7 +87,7 @@ childA :: Component Context () () AAction
 childA = component () update view
   where
     update IncA = modifyContext (+ 1)
-    view ctx _ _ =
+    view _ = vcontext $ \ctx ->
       childCard "solid" accentA "Child A" $
         [ badge accentA "uses context"
         , propsSection accentA
@@ -104,7 +104,7 @@ childB :: Component Context () () BAction
 childB = component () update view
   where
     update IncB = modifyContext (+ 10)
-    view ctx _ _ =
+    view _ = vcontext $ \ctx ->
       childCard "solid" accentB "Child B" $
         [ badge accentB "uses context"
         , propsSection accentB
@@ -117,7 +117,7 @@ childB = component () update view
 -- | Child C — does __not__ use the context (mounted with 'mount_', so
 -- @useContext@ stays 'False').
 --
--- It still receives the current context in its 'view', but because it opts out
+-- It can still read the current context in its 'view', but because it opts out
 -- of context propagation it only re-renders in response to its own actions.
 -- Watch its \"context\" readout go stale while A/B/Root update, then snap to the
 -- live value the moment you bump its local counter.
@@ -127,7 +127,7 @@ childC :: Component Context () Int CAction
 childC = component 0 update view
   where
     update BumpLocal = modify (+ 1)
-    view ctx _ localCount =
+    view localCount = vcontext $ \ctx ->
       childCard "dashed" accentC "Child C" $
         [ badge accentC "opts out"
         , propsSection accentC
@@ -157,17 +157,17 @@ accentC    = "#b2bec3"   -- muted gray (opts out)
 -- =====================================================================
 
 -- | A titled, colored card used by the child components.
-childCard :: MisoString -> MisoString -> MisoString -> [View model action] -> View model action
+childCard :: MisoString -> MisoString -> MisoString -> [View context props model action] -> View context props model action
 childCard border color title body =
   H.div_ [ CSS.style_ (cardStyle border color) ]
     (componentHeader title : body)
 
-componentHeader :: MisoString -> View model action
+componentHeader :: MisoString -> View context props model action
 componentHeader label =
   H.div_ [ CSS.style_ headerStyle ] [ text label ]
 
 -- | Small pill next to a component header, tinted with the card's accent.
-badge :: MisoString -> MisoString -> View model action
+badge :: MisoString -> MisoString -> View context props model action
 badge color label =
   H.span_
     [ CSS.style_
@@ -184,7 +184,7 @@ badge color label =
     ]
     [ text label ]
 
-infoRow :: MisoString -> MisoString -> View model action
+infoRow :: MisoString -> MisoString -> View context props model action
 infoRow label val =
   H.div_
     [ CSS.style_
@@ -199,7 +199,7 @@ infoRow label val =
     , H.span_ [ CSS.style_ [ CSS.color (CSS.hex "#444") ] ] [ text val ]
     ]
 
-sectionLabel :: MisoString -> View model action
+sectionLabel :: MisoString -> View context props model action
 sectionLabel label =
   H.div_
     [ CSS.style_
@@ -212,22 +212,22 @@ sectionLabel label =
     ]
     [ text label ]
 
-btn :: MisoString -> action -> MisoString -> View model action
+btn :: MisoString -> action -> MisoString -> View context props model action
 btn color action label =
   H.button_ [ H.onClick action, CSS.style_ (btnStyle color) ] [ text label ]
 
-buttonRow :: [View model action] -> View model action
+buttonRow :: [View context props model action] -> View context props model action
 buttonRow children =
   H.div_ [ CSS.style_ [ CSS.display "flex", CSS.gap "8px", CSS.marginTop "10px" ] ]
     children
 
 -- | Dashed inner section keyed to an accent color (props from parent / context).
-propsSection :: MisoString -> [View model action] -> View model action
+propsSection :: MisoString -> [View context props model action] -> View context props model action
 propsSection color children =
   H.div_ [ CSS.style_ (innerSectionStyle color) ] children
 
 -- | Dashed inner section keyed to an accent color (component-owned state).
-stateSection :: MisoString -> [View model action] -> View model action
+stateSection :: MisoString -> [View context props model action] -> View context props model action
 stateSection color children =
   H.div_ [ CSS.style_ (innerSectionStyle color) ] children
 
